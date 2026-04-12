@@ -14,7 +14,9 @@ sudo systemctl enable docker
 sudo usermod -aG docker $USER
 ```
 
-> Cerrá sesión y volvé a entrar. Verificá con: `groups $USER`
+```bash
+groups $USER
+```
 
 ---
 
@@ -27,21 +29,121 @@ docker run hello-world
 
 ---
 
-## RETO 3: Desplegar OpenProject
+## Docker Hub: Tags y Versiones
 
 ```bash
-# Paso 1 - Clonar el repositorio
+docker pull postgres:latest
+docker pull postgres:17
+docker pull rust:1.87-bookworm
+docker pull openproject/openproject:17-slim
+```
+
+---
+
+## Docker Hub: docker pull
+
+```bash
+docker pull ubuntu:24.04
+docker images
+```
+
+---
+
+## Docker Hub: docker push
+
+```bash
+docker login
+docker tag mi-entorno-rust tuusuario/mi-entorno-rust:1.0
+docker push tuusuario/mi-entorno-rust:1.0
+```
+
+---
+
+## Dockerfile: FROM y RUN
+
+```dockerfile
+FROM rust:1.87-bookworm
+
+RUN apt-get update && apt-get install -y \
+    libopencv-dev \
+    clang \
+    cmake
+```
+
+---
+
+## Dockerfile: COPY y WORKDIR
+
+```dockerfile
+COPY src/ /app/src/
+COPY Cargo.toml /app/
+WORKDIR /app
+```
+
+---
+
+## Dockerfile: EXPOSE
+
+```dockerfile
+EXPOSE 80
+```
+
+---
+
+## Dockerfile: CMD
+
+```dockerfile
+CMD ["cargo", "run", "--release"]
+```
+
+---
+
+## Dockerfile: Variables de Entorno
+
+```dockerfile
+ENV APP_ENV=production
+ENV DATABASE_URL=postgres://db:5432/myapp
+```
+
+```bash
+docker run -e DATABASE_URL=postgres://... mi-app
+```
+
+---
+
+## Paso 1: Clonar OpenProject
+
+```bash
 git clone https://github.com/opf/openproject-deploy.git quickstart
 cd quickstart
 cp .env.example .env
+```
 
-# Paso 2 - Levantar los contenedores
+---
+
+## Paso 2: Docker Compose
+
+```bash
+docker compose version
+sudo apt install -y docker-compose-v2
+```
+
+---
+
+## RETO 3: Desplegar OpenProject
+
+```bash
+# Paso 1 - Levantar
 docker compose up -d
+```
 
-# Paso 3 - Corregir permisos (en otra terminal)
+```bash
+# Paso 2 - Corregir permisos (en otra terminal)
 docker compose exec --user root web bash -c "mkdir -p /var/openproject/assets/files && chown -R app:app /var/openproject/assets"
+```
 
-# Paso 4 - Monitorear el seeder
+```bash
+# Paso 3 - Monitorear el seeder
 docker compose logs seeder -f | grep -v "ActiveJob\|GoodJob\|Journals"
 ```
 
@@ -50,7 +152,7 @@ docker compose logs seeder -f | grep -v "ActiveJob\|GoodJob\|Journals"
 
 ---
 
-## RETO 6: Demostrar efimeridad de contenedores
+## RETO 6: Demostrar Efimeridad
 
 ```bash
 docker run --rm alpine sh -c "echo 'Dato Critico' > /file.txt && cat /file.txt"
@@ -59,26 +161,28 @@ docker run --rm alpine cat /file.txt
 
 ---
 
-## Redes
+## Redes Internas
 
 ```bash
 docker network ls
-docker network inspect quickstart_default
-```
-
----
-
-## Monitoreo
-
-```bash
-docker compose ps
 docker stats
 docker compose exec web whoami
 ```
 
 ---
 
-## Ciclo de vida
+## Docker Networking
+
+```bash
+docker network ls
+docker network inspect quickstart_default
+docker network create mi-red
+docker network connect mi-red mi-contenedor
+```
+
+---
+
+## Ciclo de Vida
 
 ```bash
 docker compose stop
@@ -88,7 +192,7 @@ docker compose up -d
 
 ---
 
-## Higiene del sistema
+## Higiene del Sistema
 
 ```bash
 docker system prune
@@ -96,17 +200,33 @@ docker system prune
 
 ---
 
-## Laboratorio Rust + OpenCV
+## LABORATORIO FINAL
+
+### Paso 0: Registrar en OpenProject
+> Entrá a http://localhost:8080 → Proyecto "Taller Docker 2026" → New Work Package → "Configurar entorno Rust+OpenCV" → In progress
+
+---
+
+### Paso 1: Clonar desde GitHub
 
 ```bash
-# Crear .dockerignore
+git clone https://github.com/Ronald-exe/Embedded_System
+cd Embedded_System/Open_CV_Rust/proyecto_openCV
+```
+
+```bash
 cat > .dockerignore << 'EOF'
 target/
 .git/
 *.log
 EOF
+```
 
-# Crear Dockerfile
+---
+
+### Paso 2: Crear el Dockerfile
+
+```bash
 cat > Dockerfile << 'EOF'
 FROM rust:1.87-bookworm
 
@@ -119,14 +239,37 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 EOF
+```
 
-# Construir imagen
+```bash
+git add Dockerfile .dockerignore
+git commit -m "Add Docker environment"
+git push
+```
+
+---
+
+### Paso 3: Construir y publicar
+
+```bash
 docker build --network=host -t mi-entorno-rust .
+```
 
-# Habilitar pantalla
+```bash
+docker login
+docker tag mi-entorno-rust ronaldsoc/mi-entorno-rust:1.0
+docker push ronaldsoc/mi-entorno-rust:1.0
+```
+
+---
+
+### Paso 4: Entrar al contenedor
+
+```bash
 xhost +local:docker
+```
 
-# Entrar al contenedor
+```bash
 docker run -it --rm --network=host \
   -e DISPLAY=$DISPLAY \
   -v /tmp/.X11-unix:/tmp/.X11-unix \
@@ -135,15 +278,37 @@ docker run -it --rm --network=host \
   mi-entorno-rust bash
 ```
 
-> Dentro del contenedor:
-> ```bash
-> cargo build
-> ./target/debug/proyecto_openCV --video /videos/v1.mp4
-> ```
+```bash
+# Dentro del contenedor
+cargo build
+./target/debug/proyecto_openCV --video /videos/v1.mp4
+```
 
 ---
 
-## Limpieza final
+### Paso 5: El compañero se une
+
+```bash
+git clone https://github.com/Ronald-exe/Embedded_System
+cd Embedded_System/Open_CV_Rust/proyecto_openCV
+docker pull ronaldsoc/mi-entorno-rust:1.0
+xhost +local:docker
+docker run -it --rm --network=host \
+  -e DISPLAY=$DISPLAY \
+  -v /tmp/.X11-unix:/tmp/.X11-unix \
+  -v $(pwd):/app \
+  -v $HOME/Pictures:/videos \
+  ronaldsoc/mi-entorno-rust:1.0 bash
+```
+
+---
+
+### Paso 6: Cerrar en OpenProject
+> http://localhost:8080 → Work Package "Configurar entorno Rust+OpenCV" → Closed → Comentario: "Imagen publicada como ronaldsoc/mi-entorno-rust:1.0"
+
+---
+
+## Limpieza Final
 
 ```bash
 docker image rm mi-entorno-rust
