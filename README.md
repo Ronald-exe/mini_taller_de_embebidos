@@ -53,6 +53,7 @@ docker images
 
 ```bash
 docker login
+docker build --network=host -t clothing-detector .
 docker tag clothing-detector ronald_soc/clothing-detector:1.0
 docker push ronald_soc/clothing-detector:1.0
 ```
