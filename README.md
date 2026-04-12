@@ -11,11 +11,11 @@ sudo apt-get purge -y containerd.io
 sudo apt install -y docker.io
 sudo systemctl start docker
 sudo systemctl enable docker
-sudo usermod -aG docker $USER
+sudo usermod -aG docker ronald_soc
 ```
 
 ```bash
-groups $USER
+groups ronald_soc
 ```
 
 ---
@@ -54,8 +54,8 @@ docker images
 ```bash
 docker login
 docker build --network=host -t clothing-detector .
-docker tag clothing-detector ronald_soc/clothing-detector:1.0
-docker push ronald_soc/clothing-detector:1.0
+docker tag clothing-detector ronaldsoc/clothing-detector:1.0
+docker push ronaldsoc/clothing-detector:1.0
 ```
 
 ---
