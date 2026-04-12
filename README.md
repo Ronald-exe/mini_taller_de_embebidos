@@ -53,8 +53,8 @@ docker images
 
 ```bash
 docker login
-docker tag mi-entorno-rust tuusuario/mi-entorno-rust:1.0
-docker push tuusuario/mi-entorno-rust:1.0
+docker tag clothing-detector ronald_soc/clothing-detector:1.0
+docker push ronald_soc/clothing-detector:1.0
 ```
 
 ---
