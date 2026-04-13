@@ -291,7 +291,7 @@ cargo build
 
 ```bash
 git clone https://github.com/Ronald-exe/Embedded_System
-cd Embedded_System/Open_CV_Rust/proyecto_openCV
+cd Embedded_System/proyecto_openCV
 docker pull ronaldsoc/mi-entorno-rust:1.0
 xhost +local:docker
 docker run -it --rm --network=host \
