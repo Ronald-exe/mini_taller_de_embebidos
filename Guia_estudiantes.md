@@ -433,3 +433,151 @@ docker run -it --rm \
 ---
 
 > ✅ **Criterio de éxito:** Un compañero con Docker instalado debe poder compilar tu proyecto Rust+OpenCV y usar tu entorno Yocto en menos de 5 minutos, con solo `docker pull`. Sin instalar dependencias. Sin conflictos de versiones. Eso es Docker en la industria real.
+>
+> ## Buenas Prácticas
+ 
+**Siempre usá `.dockerignore` antes de cualquier build.**
+Sin él, Docker manda todo el directorio al motor — incluyendo `target/` de Rust (500MB+) o `build/` de Yocto (100GB+). El build se vuelve lento o directamente falla.
+ 
+**Nunca uses solo el tag `latest` en producción.**
+`latest` cambia con cada nuevo push y hace imposible reproducir un entorno exacto. Siempre usá versiones específicas como `:1.0` o `:scarthgap`.
+ 
+```bash
+# Mal
+docker tag mi-imagen tuusuario/mi-imagen:latest
+ 
+# Bien
+docker tag mi-imagen tuusuario/mi-imagen:1.0
+```
+ 
+**Nunca subas el archivo `.env` a GitHub.**
+El `.env` contiene contraseñas y secretos. Agregálo al `.gitignore`:
+ 
+```bash
+echo ".env" >> .gitignore
+```
+ 
+**Corré procesos como usuario no-root dentro del contenedor.**
+El Dockerfile de Yocto ya crea un usuario `yocto` para esto. Correr como root dentro de un contenedor es un riesgo de seguridad — si el contenedor es comprometido, el atacante tiene acceso root al sistema.
+ 
+**Hacé limpieza periódica del sistema.**
+Cada build genera capas e imágenes intermedias que acumulan espacio:
+ 
+```bash
+# Ver cuánto espacio está usando Docker
+docker system df
+ 
+# Limpiar todo lo que no está en uso
+docker system prune
+ 
+# Limpiar incluyendo imágenes sin tag
+docker system prune -a
+```
+ 
+**Montá volúmenes para datos que no deben perderse.**
+El `build/` de Yocto, el `target/` de Rust y cualquier dato que querés conservar deben estar en volúmenes o bind mounts (`-v`), nunca solo dentro del contenedor.
+ 
+---
+ 
+## Errores Comunes y Soluciones
+ 
+**Error: `Permission denied` al correr docker**
+```
+permission denied while trying to connect to the Docker daemon socket
+```
+Causa: tu usuario no está en el grupo `docker`.
+Solución:
+```bash
+sudo usermod -aG docker $USER
+# Cerrá sesión y volvé a entrar
+```
+ 
+---
+ 
+**Error: Seeder de OpenProject falla con `Permission denied`**
+```
+Errno::EACCES: Permission denied @ dir_s_mkdir - /var/openproject/assets/files
+```
+Causa: el volumen de OpenProject no tiene los permisos correctos para el usuario `app`.
+Solución:
+```bash
+docker compose exec --user root web bash -c "mkdir -p /var/openproject/assets/files && chown -R app:app /var/openproject/assets"
+docker compose restart seeder
+```
+ 
+---
+ 
+**Error: Build pesa 500MB o más**
+Causa: no existe el `.dockerignore` y Docker está mandando `target/` al motor.
+Solución: creá el `.dockerignore` antes del build:
+```bash
+cat > .dockerignore << 'EOF'
+target/
+.git/
+*.log
+EOF
+```
+ 
+---
+ 
+**Error: Build de Yocto falla o tarda horas**
+Causa: no existe el `.dockerignore` y Docker intenta copiar `build/`, `downloads/` o `sstate-cache/`.
+Solución:
+```bash
+cat > .dockerignore << 'EOF'
+build/
+.git/
+downloads/
+sstate-cache/
+*.log
+EOF
+```
+ 
+---
+ 
+**Error: `docker push` falla con `unauthorized`**
+```
+unauthorized: authentication required
+```
+Causa: no iniciaste sesión en Docker Hub.
+Solución:
+```bash
+docker login
+```
+ 
+---
+ 
+**Error: `tag does not exist`**
+```
+tag does not exist: tuusuario/mi-imagen:1.0
+```
+Causa: hiciste `docker push` antes de hacer `docker tag`.
+Solución: siempre hacer el tag primero:
+```bash
+docker tag mi-imagen tuusuario/mi-imagen:1.0
+docker push tuusuario/mi-imagen:1.0
+```
+ 
+---
+ 
+**Error: carpeta no montada dentro del contenedor**
+```
+bash: cd: /yocto/poky: No such file or directory
+```
+Causa: el volumen fue escrito sin los dos puntos `:` que separan la ruta real de la ruta dentro del contenedor.
+```bash
+# Mal — falta el :
+-v ~/Documents/poky-scarthgap/yocto/poky
+ 
+# Bien
+-v ~/Documents/poky-scarthgap:/yocto/poky
+```
+ 
+---
+ 
+**Error: comandos con espacios rotos al copiar del PDF**
+```
+docker: unknown flag: --network=host
+```
+Causa: el PDF introduce espacios invisibles o guiones especiales al copiar.
+Solución: siempre copiá los comandos desde el archivo `.md` en el repositorio, nunca desde el PDF.
