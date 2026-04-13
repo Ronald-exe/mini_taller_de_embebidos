@@ -211,7 +211,7 @@ docker system prune
 ### Paso 1: Clonar desde GitHub
 
 ```bash
-git clone https://github.com/Ronald-exe/Embedded_System
+git clone git@github.com:Ronald-exe/Embedded_System.git
 cd Embedded_System/proyecto_openCV
 ```
 
@@ -290,7 +290,7 @@ cargo build
 ### Paso 5: El compañero se une
 
 ```bash
-git clone https://github.com/Ronald-exe/Embedded_System
+git clone git@github.com:Ronald-exe/Embedded_System.git
 cd Embedded_System/proyecto_openCV
 docker pull ronaldsoc/mi-entorno-rust:1.0
 xhost +local:docker
