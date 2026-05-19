@@ -103,6 +103,8 @@ Abrí el navegador en: **http://localhost:8080**
 ---
 ### Acceder a OpenProject si siguio el turial en clases y cambio la contrasena
 
+Abrí el navegador en: **http://localhost:8080**
+
 - **Usuario:** `admin`
 - **Contraseña:** `debe poner la contrasena que usted creo`
 
