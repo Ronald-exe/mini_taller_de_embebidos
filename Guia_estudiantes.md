@@ -93,7 +93,7 @@ docker compose logs seeder -f | grep -v "ActiveJob\|GoodJob\|Journals"
 > ✅ Listo cuando veas: `*** Seeding MCP configuration`
 > Esto puede tardar entre 5 y 10 minutos.
 
-### Acceder a OpenProject
+### Acceder a OpenProject por primera vez
 
 Abrí el navegador en: **http://localhost:8080**
 
@@ -101,6 +101,13 @@ Abrí el navegador en: **http://localhost:8080**
 - **Contraseña:** `admin`
 
 ---
+### Acceder a OpenProject si siguio el turial en clases y cambio la contrasena
+
+- **Usuario:** `admin`
+- **Contraseña:** `debe poner la contrasena que usted creo`
+
+---
+
 
 ## Paso 4: Registrar tu tarea en OpenProject
 
